@@ -1,0 +1,6 @@
+{
+  "name": "ProcurePulse - Sourcing & Supply Chain Analytics",
+  "description": "Real-time strategic sourcing, procurement intelligence, Approved Vendor List (AVL) risk matrix, and market price benchmarking for pharmaceutical supply chains.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
