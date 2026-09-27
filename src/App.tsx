@@ -1,22 +1,34 @@
 import React, { useState } from 'react';
-import { MaterialItem, ViewTab } from './types/procurement';
+import { MaterialItem, ViewTab, SlicerState } from './types/procurement';
 import { INITIAL_PROCUREMENT_DATA } from './data/procurementData';
 import { parseCSV, mapRawRowToMaterialItem } from './utils/dataParser';
 import { Header } from './components/Header';
-import { ExecutiveSummary } from './components/ExecutiveSummary';
-import { RiskMatrix } from './components/RiskMatrix';
-import { AvlPipeline } from './components/AvlPipeline';
-import { MarketIntel } from './components/MarketIntel';
+import { DirectorAnalytics } from './components/DirectorAnalytics';
+import { MultiRoleSlicers } from './components/MultiRoleSlicers';
+import { InquiryVendorPortal } from './components/InquiryVendorPortal';
+import { AiAssistant } from './components/AiAssistant';
+import { CollaborativeHub } from './components/CollaborativeHub';
 import { MaterialExplorer } from './components/MaterialExplorer';
 import { CostSimulator } from './components/CostSimulator';
 import { MaterialModal } from './components/MaterialModal';
+import { ChatbotWidget } from './components/ChatbotWidget';
 
 export default function App() {
   const [items, setItems] = useState<MaterialItem[]>(INITIAL_PROCUREMENT_DATA);
-  const [activeTab, setActiveTab] = useState<ViewTab>('overview');
+  const [activeTab, setActiveTab] = useState<ViewTab>('director-analytics');
   const [currency, setCurrency] = useState<'USD' | 'PKR'>('USD');
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Global slicer state for Section 2
+  const [slicerState, setSlicerState] = useState<SlicerState>({
+    role: 'director',
+    category: 'ALL',
+    sourcing: 'ALL',
+    originRegion: 'ALL',
+    pipelinePhase: 'ALL',
+    searchQuery: ''
+  });
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -25,7 +37,7 @@ export default function App() {
 
   const handleResetData = () => {
     setItems(INITIAL_PROCUREMENT_DATA);
-    showToast('Reset to default enterprise sourcing dataset');
+    showToast('Reset to default ATCO master procurement dataset');
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +57,6 @@ export default function App() {
         }
 
         const parsedItems: MaterialItem[] = [];
-        // Skip header row
         for (let i = 1; i < rows.length; i++) {
           const item = mapRawRowToMaterialItem(rows[i], i);
           if (item) {
@@ -55,16 +66,15 @@ export default function App() {
 
         if (parsedItems.length > 0) {
           setItems(parsedItems);
-          showToast(`Successfully imported ${parsedItems.length} materials from ${file.name}`);
+          showToast(`Loaded ${parsedItems.length} materials from ${file.name}`);
         } else {
-          showToast('No valid material rows recognized from the uploaded CSV structure');
+          showToast('No valid material rows recognized from the uploaded CSV');
         }
-      } catch (err) {
+      } catch {
         showToast('Error parsing CSV file');
       }
     };
     reader.readAsText(file);
-    // Reset file input value
     e.target.value = '';
   };
 
@@ -72,13 +82,13 @@ export default function App() {
     <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-sans">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-medium flex items-center gap-2 border border-slate-700 animate-in slide-in-from-bottom-2 duration-200">
+        <div className="fixed bottom-20 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-medium flex items-center gap-2 border border-slate-700 animate-in slide-in-from-bottom-2 duration-200">
           <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
           {toastMessage}
         </div>
       )}
 
-      {/* Primary Sticky Header conforming to Top Bar Contract */}
+      {/* Main Sticky Header */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -89,42 +99,51 @@ export default function App() {
         onFileUpload={handleFileUpload}
       />
 
-      {/* Main Content Area */}
+      {/* Main Viewport Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'overview' && (
-          <ExecutiveSummary
+        {activeTab === 'director-analytics' && (
+          <DirectorAnalytics
             items={items}
             currency={currency}
             onSelectMaterial={setSelectedMaterial}
-            onNavigateTab={setActiveTab}
+            onOpenAiBriefing={() => setActiveTab('ai-assistant')}
           />
         )}
 
-        {activeTab === 'risk-matrix' && (
-          <RiskMatrix
+        {activeTab === 'slicers-reports' && (
+          <MultiRoleSlicers
             items={items}
-            currency={currency}
-            onSelectMaterial={setSelectedMaterial}
-          />
-        )}
-
-        {activeTab === 'avl-pipeline' && (
-          <AvlPipeline
-            items={items}
+            slicerState={slicerState}
+            setSlicerState={setSlicerState}
             currency={currency}
             onSelectMaterial={setSelectedMaterial}
           />
         )}
 
-        {activeTab === 'market-intel' && (
-          <MarketIntel
-            items={items}
+        {activeTab === 'inquiry-portal' && (
+          <InquiryVendorPortal
+            materials={items}
             currency={currency}
             onSelectMaterial={setSelectedMaterial}
           />
         )}
 
-        {activeTab === 'explorer' && (
+        {activeTab === 'ai-assistant' && (
+          <AiAssistant
+            materials={items}
+            currency={currency}
+            onSelectMaterial={setSelectedMaterial}
+          />
+        )}
+
+        {activeTab === 'collaborative-hub' && (
+          <CollaborativeHub
+            materials={items}
+            onSelectMaterial={setSelectedMaterial}
+          />
+        )}
+
+        {activeTab === 'catalog' && (
           <MaterialExplorer
             items={items}
             currency={currency}
@@ -141,39 +160,51 @@ export default function App() {
         )}
       </main>
 
-      {/* Material 360 Detail Modal */}
+      {/* Persistent Floating AI Chatbot Assistant Widget */}
+      <ChatbotWidget
+        materials={items}
+        currency={currency}
+      />
+
+      {/* Material 360° Detail Modal */}
       <MaterialModal
         item={selectedMaterial}
         onClose={() => setSelectedMaterial(null)}
         currency={currency}
       />
 
-      {/* Quiet Footer */}
+      {/* Quiet Corporate Footer */}
       <footer className="border-t border-slate-200 bg-white py-4 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 font-mono">
           <div>
-            <span>ProcurePulse Intelligence Platform</span>
+            <span>ATCO Laboratories Limited</span>
             <span aria-hidden="true" className="mx-2">·</span>
-            <span>Real-time SCM & Strategic Sourcing Analytics</span>
+            <span>Strategic Procurement & Supply Chain Directorate</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 font-sans text-xs">
             <button
-              onClick={() => setActiveTab('overview')}
+              onClick={() => setActiveTab('director-analytics')}
               className="hover:text-slate-900 transition-colors"
             >
-              Command Center
+              Director Analytics
             </button>
             <button
-              onClick={() => setActiveTab('market-intel')}
+              onClick={() => setActiveTab('inquiry-portal')}
               className="hover:text-slate-900 transition-colors"
             >
-              Customs Benchmarks
+              Vendor Portal
             </button>
             <button
-              onClick={() => setActiveTab('cost-simulator')}
+              onClick={() => setActiveTab('ai-assistant')}
               className="hover:text-slate-900 transition-colors"
             >
-              Savings Simulator
+              AI Sourcing
+            </button>
+            <button
+              onClick={() => setActiveTab('collaborative-hub')}
+              className="hover:text-slate-900 transition-colors"
+            >
+              Knowledge Hub
             </button>
           </div>
         </div>

@@ -86,17 +86,97 @@ export interface MaterialItem {
   parsedSamples: SamplePipelineItem[];
 }
 
-export type ViewTab = 'overview' | 'risk-matrix' | 'avl-pipeline' | 'market-intel' | 'explorer' | 'cost-simulator';
+export type ViewTab = 
+  | 'director-analytics' 
+  | 'slicers-reports' 
+  | 'inquiry-portal' 
+  | 'ai-assistant' 
+  | 'collaborative-hub' 
+  | 'catalog'
+  | 'cost-simulator';
 
-export interface FilterState {
-  search: string;
-  type: string; // 'ALL' | 'API' | 'EXP' | 'PM'
-  sourceType: string; // 'ALL' | 'Single Source' | 'Fixed Source' | 'Multi Source'
-  sourceOrigin: string; // 'ALL' | 'IMPORT' | 'LOCAL'
-  classValue: string; // 'ALL' | 'A' | 'B' | 'C'
-  category: string; // 'ALL' | ...
-  originCountry: string; // 'ALL' | 'CHINA' | 'INDIA' | ...
-  hasCompetitorDiscount: boolean;
-  hasQualityRejection: boolean;
-  hasUnderDev: boolean;
+export type UserRole = 'director' | 'manager' | 'qc' | 'agent';
+
+export interface SlicerState {
+  role: UserRole;
+  category: 'ALL' | 'API' | 'EXP' | 'PM';
+  sourcing: 'ALL' | 'Single Source' | 'Multi Source' | 'Fixed Source';
+  originRegion: 'ALL' | 'IMPORT' | 'LOCAL' | 'CHINA' | 'INDIA' | 'EUROPE' | 'SE_ASIA';
+  pipelinePhase: 'ALL' | 'Commercial' | 'Under Development' | 'Under Stability' | 'Critical High-Risk';
+  searchQuery: string;
+}
+
+export interface VendorQuote {
+  id: string;
+  inquiryId: string;
+  vendorId: string;
+  vendorName: string;
+  materialCode: string;
+  materialName: string;
+  originCountry: string;
+  fobPriceUSD: number;
+  cfrPriceUSD: number;
+  moq: number;
+  leadTimeWeeks: number;
+  shelfLifePercent: number; // e.g. 85% (must be >= 75% for API/EXP and >= 94% for pellets)
+  workingStandardProvided: boolean;
+  coaAttached: boolean;
+  dmfAvailable: boolean;
+  paymentTerms: string;
+  submittedAt: string;
+  complianceScore: number;
+  targetRateVariancePct: number;
+  notes?: string;
+}
+
+export interface SourcingInquiry {
+  id: string;
+  materialCode: string;
+  materialName: string;
+  category: string;
+  targetAnnualQty: number;
+  targetLotQty: number;
+  uom: string;
+  preferredOrigins: string[];
+  targetPriceUSD: number;
+  lastContractPriceUSD: number;
+  specStandard: string; // e.g. BP / USP / In-House
+  status: 'Draft' | 'Sent to Vendors' | 'Quotes Received' | 'Under Evaluation' | 'Awarded';
+  createdAt: string;
+  invitedVendors: { id: string; name: string; token: string }[];
+  quotesCount: number;
+}
+
+export interface DiscussionThread {
+  id: string;
+  materialCode: string;
+  materialName: string;
+  author: string;
+  role: string;
+  text: string;
+  priority: 'Routine' | 'Urgent' | 'Critical';
+  timestamp: string;
+  tags?: string[];
+}
+
+export interface AuditEvent {
+  id: string;
+  materialCode: string;
+  materialName: string;
+  eventType: 'PFI Received' | 'Sample Dispatched' | 'QC Audit Scheduled' | 'QC Query Resolved' | 'PO Issued' | 'Vendor Disqualified';
+  description: string;
+  user: string;
+  timestamp: string;
+  status: 'Completed' | 'Pending' | 'Flagged';
+}
+
+export interface TrainingVideo {
+  id: string;
+  title: string;
+  category: 'User Training' | 'Vendor Onboarding' | 'Plant Audit Video Tours' | 'Quality & Regulatory Guidelines';
+  duration: string;
+  url: string;
+  description: string;
+  instructor: string;
+  badge?: string;
 }
